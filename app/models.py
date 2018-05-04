@@ -1,7 +1,10 @@
 from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import UserMixin
+from app import login
 from app import db
 
-class UserModel(db.Model):
+class UserModel(UserMixin, db.Model):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -13,6 +16,12 @@ class UserModel(db.Model):
     def __repr__(self):
         return '<User {}>'.format(self.username)
 
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
 class PostModel(db.Model):
     __tablename__ = 'posts'
     id = db.Column(db.Integer, primary_key=True)
@@ -22,3 +31,7 @@ class PostModel(db.Model):
 
     def __repr__(self):
         return '<Post {}>'.format(self.body)
+
+@login.user_loader
+def load_user(id):
+    return UserModel.query.get(int(id))
